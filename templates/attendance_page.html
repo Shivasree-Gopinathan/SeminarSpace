@@ -1,0 +1,198 @@
+<!-- templates/attendance_page.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+     <style>
+        body {
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 130px 0 0 -580px;
+            padding: 0;
+            background: #000;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        h1, h2 {
+            color: #ffffff;
+        }
+
+        video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+            color: #ffffff;
+        }
+
+        button {
+            width: 160px;
+            height: 60px;
+            margin: 20px 20px;
+            font-size: 14px;
+            background-color: #3498db;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            z-index: 1;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            filter: brightness(120%);
+            color: transparent;
+        }
+
+        button:after {
+            content: '\2192';
+            position: absolute;
+            opacity: 0;
+            right: 50%;
+            top: 50%;
+            transform: translate(50%, -50%);
+            font-size: 36px;
+            color: #ffffff;
+            filter: brightness(200%);
+            transition: all 0.3s;
+            z-index: 2;
+        }
+
+        button:hover:after {
+            opacity: 1;
+            right: 55%;
+            color: #ffffff;
+        }
+
+        #resultsList {
+            display: none;
+        }
+
+         .styled-select {
+        width: 200px;
+        height: 40px;
+        font-size: 16px;
+        border: 1px solid #3498db;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #555;
+        padding: 5px 10px;
+        margin: 10px 0;
+        cursor: pointer;
+    }
+     .toast {
+        color: white;
+    }
+
+    </style>
+
+</head>
+<body>
+<div id="toastContainer"></div>
+ <video autoplay loop muted>
+        <source src="{{ url_for('static', filename='bg7.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <h1>Welcome to the Attendance records!</h1>
+    <h2>Attendants:</h2>
+    <ul id="unknownFilesList"></ul>
+
+    <h2 id="matchedRecordsHeader"></h2>
+    <ul id="resultsList"></ul>
+<h2>Choose Workshop:</h2>
+    <select id="workshopDropdown" class="styled-select"></select>
+    <button id="recordAttendanceBtn">Record Attendance</button>
+
+    <script>
+     // Function to show a toast message
+    function showToast(message, isSuccess = true) {
+        // Create a new toast element
+        var toast = $("<div class='toast " + (isSuccess ? 'success' : 'error') + "'>" + message + "</div>");
+
+        // Append the toast to the container
+        $("#toastContainer").append(toast);
+
+        // Automatically remove the toast after a few seconds
+        setTimeout(function () {
+            toast.remove();
+        }, 3000); // 3000 milliseconds (adjust as needed)
+    }
+        // Fetch and display file names when the page loads
+        $(document).ready(function () {
+            // Make an AJAX request to get unknown file names
+            $.get("/get_unknown_files", function (data) {
+                // Update the file names list on the page
+                $("#unknownFilesList").empty();
+                data.fileNames.forEach(function (fileName) {
+                    $("#unknownFilesList").append("<li>" + fileName + "</li>");
+                });
+            });
+        });
+
+        // Make an AJAX request to get workshop names
+            $.get("/get_workshop_names", function (data) {
+                // Update the workshop dropdown on the page
+                $("#workshopDropdown").empty();
+                data.workshopNames.forEach(function (workshopName) {
+                    $("#workshopDropdown").append("<option value='" + workshopName + "'>" + workshopName + "</option>");
+                });
+            });
+
+
+        // Handle button click event to record attendance
+        $("#recordAttendanceBtn").click(function () {
+            // Process unknown files and display results
+            var selectedWorkshop = $("#workshopDropdown").val();
+            processUnknownFiles(selectedWorkshop);
+        });
+
+        // Function to process unknown files and display results
+        function processUnknownFiles(selectedWorkshop) {
+            // Make an AJAX request to process unknown files
+            $.get("/process_unknown_files",{ selectedWorkshop: selectedWorkshop }, function (data) {
+                // Update the results list on the page
+                $("#resultsList").empty();
+                data.results.forEach(function (result) {
+                    // Displaying the same information as in the print statement
+                    var resultMessage = "True Name for " + result.file + ": " + result.true_name;
+                    $("#resultsList").append("<li>" + resultMessage + "</li>");
+
+                     // Check if the selected workshop is not empty
+            var selectedWorkshop = $("#workshopDropdown").val();
+            if (selectedWorkshop) {
+                // Make an AJAX request to update the student's document
+                $.post("/update_workshop_list", { id: result.true_name, workshop: selectedWorkshop }, function (response) {
+                    console.log(response.message);
+                    showToast(response.message, true);
+                });
+            }
+                });
+                $("#resultsList").show();
+                $("#matchedRecordsHeader").text("Matched records:");
+            });
+        }
+    </script>
+</body>
+</html>

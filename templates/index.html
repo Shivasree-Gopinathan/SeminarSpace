@@ -1,0 +1,273 @@
+<!-- templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeminarSpace</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+           margin: 130px 0 0 -580px;
+            padding: 0;
+            background: #000; /* Fallback color */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+
+h1 {
+    /* color: #3498db;  Blue color for the title */
+    color: #ffffff;
+    font-size: 36px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.top-buttons,
+.bottom-buttons {
+            display: flex;
+            margin: 20px; /* Reduced margin between top and bottom buttons */
+        }
+
+button {
+    width: 160px; /* Increased button width */
+    height: 60px; /* Increased button height */
+   margin: 20px 20px; /* Increased margin for buttons */
+    font-size: 14px; /* Larger font size for buttons */
+    background-color: #3498db;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    position: relative;
+    z-index: 1;
+}
+
+      button:hover {
+            background-color: #2980b9;
+            filter: brightness(120%); /* Darken the background on hover */
+            color: transparent;
+        }
+
+        button:after {
+            content: '\2192'; /* Unicode arrow right character */
+            position: absolute;
+            opacity: 0;
+            right: 50%;
+            top: 50%;
+            transform: translate(50%, -50%);
+            font-size: 36px; /* Increased arrow size */
+           color: #ffffff; /* Set arrow color to white */
+    filter: brightness(200%); /* Adjust brightness for the arrow */
+    transition: all 0.3s;
+     z-index: 2;
+        }
+
+        button:hover:after {
+            opacity: 1;
+            right: 55%;
+            color: #ffffff;
+        }
+
+
+   table {
+    display: none;
+    margin-left: 950px;
+    width: 80%;
+}
+
+th, td {
+    border: 1px solid #dddddd;
+    text-align: center;
+    padding: 12px;
+}
+
+th {
+    background-color: #3498db;
+    color: #ffffff;
+     font-size: 18px;
+}
+#dataList {
+    text-align: center; /* Center the contents of the dataList tbody */
+    color: #ffffff;
+}
+table {
+    border: none;
+}
+
+ .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+ <video autoplay loop muted>
+        <source src="{{ url_for('static', filename='bg7.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+ <div class="container">
+    <h1>SeminarSpace</h1>
+    <table border="1" id="dataTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>NAME</th>
+                <th>Program Name</th>
+                <th>Attendance Count</th>
+                <th>Workshop List</th>
+            </tr>
+        </thead>
+        <tbody id="dataList">
+            <!-- Names and encodings will be displayed here -->
+        </tbody>
+    </table>
+     <div class="top-buttons">
+    <button onclick="location.href='/register_page'">Go to Register Page</button>
+    <button id="allRegisteredDataBtn">Retrieve All Registered Data</button>
+    <button id="goToAttendancePageBtn">Go to Attendance Page</button>
+    <button onclick="location.href='/capture_photo'">Capture Photo for attendance</button>
+     </div>
+     <div class="bottom-buttons">
+    <button onclick="location.href='/register_photo'">Register Photo for records</button>
+    <button id="clearRegisteredUsersBtn">Clear Registered Users</button>
+    <button id="clearAttendanceListBtn">Clear Attendance List</button>
+    <button id="addWorkshopBtn">Add Workshop</button>
+     </div>
+ </div>
+
+  <div id="addWorkshopModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <label for="workshopName">Workshop Name:</label>
+            <input type="text" id="workshopName" required><br>
+            <label for="presenterName">Presenter Name:</label>
+            <input type="text" id="presenterName" required><br>
+            <button id="registerWorkshopBtn">Register Workshop</button>
+        </div>
+    </div>
+    <script>
+        // Handle button click event to retrieve all registered data
+        $("#allRegisteredDataBtn").click(function () {
+            // Make an AJAX request to the server
+            $.get("/all_registered_data", function (data) {
+                // Update the data table on the page
+                $("#dataList").empty();
+                data.data.forEach(function (item) {
+                    $("#dataList").append("<tr><td>" + item.ID + "</td><td>" + item.name + "</td><td>" + item.Program_name + "</td><td>" + item.attendance_count + "</td><td>"+ item.workshop_list + "</td></tr>");
+                });
+                $("#dataTable").show();
+            });
+        });
+
+        // Use jQuery to attach the click event for "Go to Attendance Page" button
+        $("#goToAttendancePageBtn").click(function () {
+            // Navigate to the attendance page
+            location.href = '/attendance_page';
+        });
+
+         // Handle button click event to clear registered users
+    $("#clearRegisteredUsersBtn").click(function () {
+        // Make an AJAX request to the server to clear registered users
+        $.get("/clear_registered_users", function (data) {
+            alert(data.message);
+        });
+    });
+
+    // Handle button click event to clear attendance list
+    $("#clearAttendanceListBtn").click(function () {
+        // Make an AJAX request to the server to clear the attendance list
+        $.get("/clear_attendance_list", function (data) {
+            alert(data.message);
+        });
+    });
+
+      // Handle button click event to open the Add Workshop modal
+        $("#addWorkshopBtn").click(function () {
+            // Display the modal
+            $("#addWorkshopModal").css("display", "block");
+        });
+
+        // Handle click on close button in the modal
+        $(".close").click(function () {
+            // Close the modal
+            $("#addWorkshopModal").css("display", "none");
+        });
+
+        // Handle button click event to register the workshop
+        $("#registerWorkshopBtn").click(function () {
+            // Get workshop details from the modal inputs
+            var workshopName = $("#workshopName").val();
+            var presenterName = $("#presenterName").val();
+
+            // Make an AJAX request to register the workshop
+            $.ajax({
+                type: 'POST',
+                url: '/register_workshop',
+                data: { workshopName: workshopName, presenterName: presenterName },
+                success: function (data) {
+                    // Display success message
+                    alert(data.message);
+
+                    // Close the modal
+                    $("#addWorkshopModal").css("display", "none");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

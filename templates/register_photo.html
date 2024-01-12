@@ -1,0 +1,157 @@
+<!-- templates/register_photo.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Photo</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+     <style>
+        body {
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 130px 0 0 -580px;
+            padding: 0;
+            background: #000;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #ffffff;
+        }
+
+        h1 {
+            color: #ffffff;
+        }
+
+        video#bgVideo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+
+        video#video {
+            width: 15%; /* Adjust the width as needed */
+            height: 15%; /* Auto height to maintain aspect ratio */
+        }
+
+        label {
+            margin-top: 10px;
+            display: block;
+            font-size: 16px;
+        }
+
+        input {
+            width: 300px;
+            padding: 10px;
+            margin: 10px;
+            font-size: 14px;
+        }
+
+        button {
+            width: 160px;
+            height: 60px;
+            margin: 20px 20px;
+            font-size: 14px;
+            background-color: #3498db;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            z-index: 1;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            filter: brightness(120%);
+            color: transparent;
+        }
+
+        button:after {
+            content: '\2192';
+            position: absolute;
+            opacity: 0;
+            right: 50%;
+            top: 50%;
+            transform: translate(50%, -50%);
+            font-size: 36px;
+            color: #ffffff;
+            filter: brightness(200%);
+            transition: all 0.3s;
+            z-index: 2;
+        }
+
+        button:hover:after {
+            opacity: 1;
+            right: 55%;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Register user photo</h1>
+
+   <video id="bgVideo" autoplay loop muted>
+        <source src="{{ url_for('static', filename='bg7.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <video id="video" width="640" height="480" autoplay></video><br>
+
+    <label for="fileName">Enter File Name:</label>
+    <input type="text" id="fileName"><br>
+
+    <button id="captureBtn">Capture</button>
+
+    <script>
+        $(document).ready(function () {
+            const video = document.getElementById('video');
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                    video.srcObject = stream;
+                })
+                .catch((error) => {
+                    console.error('Error accessing webcam:', error);
+                });
+
+            $('#captureBtn').click(function () {
+                capturePhoto();
+            });
+
+            function capturePhoto() {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+
+                // Set canvas dimensions to match the video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Draw the current video frame onto the canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert the canvas to a data URL and send it to the server
+                const imageDataUrl = canvas.toDataURL('image/png');
+                const fileName = $('#fileName').val();
+
+                // Make an AJAX request to save the captured photo
+                $.ajax({
+                    type: 'POST',
+                    url: '/save_registered_photo',
+                    data: { fileName: fileName, imageDataUrl: imageDataUrl },
+                    success: function (data) {
+                        alert(data.message);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

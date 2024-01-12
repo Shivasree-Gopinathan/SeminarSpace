@@ -1,0 +1,188 @@
+<!-- templates/register_page.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 130px 0 0 -580px;
+            padding: 0;
+            background: #000;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 36px;
+        }
+         video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+
+        table {
+            border: 1px solid #dddddd;
+            width: 30%;
+            margin: 20px auto;
+            background-color: #3498db;
+            color: #ffffff;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: center;
+            padding: 12px;
+        }
+
+        th {
+            background-color: #2980b9;
+            color: #ffffff;
+            font-size: 18px;
+        }
+
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 5px;
+        }
+
+        button {
+            width: 160px;
+            height: 60px;
+            margin: 20px 20px;
+            font-size: 14px;
+            background-color: #3498db;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            z-index: 1;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            filter: brightness(120%);
+            color: transparent;
+        }
+
+        button:after {
+            content: '\2192';
+            position: absolute;
+            opacity: 0;
+            right: 50%;
+            top: 50%;
+            transform: translate(50%, -50%);
+            font-size: 36px;
+            color: #ffffff;
+            filter: brightness(200%);
+            transition: all 0.3s;
+            z-index: 2;
+        }
+
+        button:hover:after {
+            opacity: 1;
+            right: 55%;
+            color: #ffffff;
+        }
+    </style>
+
+</head>
+<body>
+<video autoplay loop muted>
+        <source src="{{ url_for('static', filename='bg7.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <h1>Registration Page</h1>
+    <!-- Add a table to display file names -->
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Program Name</th>
+            </tr>
+        </thead>
+        <tbody id="fileNamesList">
+            <!-- File names will be displayed here -->
+        </tbody>
+    </table>
+    <button id="registerBtn">Register</button>
+
+    <script>
+    // Fetch and display file names when the page loads
+        $(document).ready(function () {
+            // Make an AJAX request to get file names
+            $.get("/get_known_files", function (data) {
+                // Update the file names list on the page
+                $("#fileNamesList").empty();
+                console.log("hiii"+ data.fileNames);
+                data.fileNames.forEach(function (fileName) {
+                    $("#fileNamesList").append(
+                   "<tr>" +
+                        "<td>" + fileName + "</td>" +
+                        "<td><input type='text' id='" + fileName + "_input1'></td>" +
+                        "<td><input type='text' id='" + fileName + "_input2'></td>" +
+                    "</tr>");
+                });
+            });
+        });
+        // Handle registration button click event
+        $("#registerBtn").click(function () {
+
+         var inputArray1 = [];
+        var inputArray2 = [];
+        // Iterate through file names and gather input values
+        $("#fileNamesList tr").each(function () {
+              var fileName = $(this).find("td:first").text();
+
+    // Update the selector to use attribute selectors
+    var input1Value = $("input[id^='" + fileName + "_input1']").val();
+    var input2Value = $("input[id^='" + fileName + "_input2']").val();
+            //console.log(input1Value);
+            // Push values to arrays
+            inputArray1.push(input1Value);
+            inputArray2.push(input2Value);
+        });
+        console.log(inputArray1);
+        console.log(inputArray2);
+             // Make an AJAX request to register
+    $.ajax({
+        type: "GET",
+        url: "/register",
+        data: {
+            inputArray1: JSON.stringify(inputArray1),
+            inputArray2: JSON.stringify(inputArray2)
+        },
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (data) {
+            // Display the registration message
+            alert(data.message);
+             window.location.href = '/';
+        },
+        error: function (error) {
+            console.log("Error:", error);
+        }
+    });
+        });
+    </script>
+</body>
+</html>
